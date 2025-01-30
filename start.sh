@@ -1,35 +1,24 @@
-#!/bin/bash
+#!/bin/sh
 
-if [ -n "$TAILSCALE_AUTHKEY" ]; then
-  echo "Starting Tailscale daemon..."
-  /app/tailscaled --statedir==/app/data/tailscale_state \
-    --state=/app/data/tailscale_state/tailscaled.state \
-    --socket=/var/run/tailscale/tailscaled.sock \
-    --socks5-server=localhost:1055 \
-    --outbound-http-proxy-listen=localhost:1055 &
+mkdir -p /app/data/app/tailscale /var/run/tailscale /app/data/app/adguardhome
 
-  TAILSCALE_ARGS="--authkey=$TAILSCALE_AUTHKEY --hostname=${TAILSCALE_HOSTNAME:-uptime-kuma}"
-
-  if [ "${TAILSCALE_EXITNODE:-false}" = "true" ]; then
-    echo "Configuring as exit node..."
-    TAILSCALE_ARGS="$TAILSCALE_ARGS --advertise-exit-node"
-  fi
-
-  until /app/tailscale up $TAILSCALE_ARGS; do
-    echo "Waiting for Tailscale to be ready..."
-    sleep 5
-  done
-else
-  echo "TAILSCALE_AUTHKEY not set, skipping Tailscale setup"
+if [ -w /etc/resolv.conf ]; then
+  echo "nameserver 127.0.0.1" >/etc/resolv.conf
+  chmod 644 /etc/resolv.conf
 fi
 
-if [ "$ONLY_TAILSCALE" = "true" ]; then
-  echo "Using Tailscale IP for Uptime Kuma"
-  export HOST=$(/app/tailscale ip | head -n 1)
-  /app/tailscale serve / proxy 80
-else
-  echo "Using default host for Uptime Kuma"
-  export HOST="0.0.0.0"
-fi
+sysctl -w net.ipv4.ip_forward=1
+sysctl -w net.ipv6.conf.all.forwarding=1
 
-cd /app && node server/server.js --port 80 --host $HOST
+# ref: https://community.fly.io/t/is-it-possible-to-use-my-own-init/12082/4
+if [ "$$" -eq 1; then
+  exec /init "$@"
+else
+  exec unshare --pid sh -c '
+        unshare --mount-proc /init "$@" &
+        child="$!"
+        trap "kill -INT \$child" INT
+        trap "kill -TERM \$child" TERM
+        until wait "$child" || ! kill -0 "$child" 2>/dev/null; do :; done
+    ' sh "$@"
+fi

@@ -1,0 +1,2 @@
+#!/command/with-contenv sh
+cd /app && node server/server.js --port 80 --host $HOST | sed 's/^/[uptime-kuma] /'

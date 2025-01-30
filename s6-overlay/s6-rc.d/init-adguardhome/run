@@ -1,0 +1,2 @@
+#!/command/with-contenv sh
+exec /app/AdGuardHome -c /app/data/app/adguardhome/AdGuardHome.yaml -w /app/data/app/adguardhome | sed 's/^/[adguardhome] /'

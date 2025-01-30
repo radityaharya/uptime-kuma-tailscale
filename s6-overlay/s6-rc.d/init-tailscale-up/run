@@ -1,0 +1,4 @@
+#!/command/with-contenv sh
+/app/tailscale up --authkey=${TAILSCALE_AUTHKEY} --hostname=internal --ssh=true --advertise-exit-node=true --accept-dns=false
+
+tail -f /dev/null

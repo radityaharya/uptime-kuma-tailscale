@@ -1,0 +1,2 @@
+#!/command/with-contenv sh
+/app/tailscaled --statedir==/app/data/tailscale_state --state=/app/data/tailscale_state/tailscaled.state --socket=/var/run/tailscale/tailscaled.sock | sed 's/^/[tailscale] /'
