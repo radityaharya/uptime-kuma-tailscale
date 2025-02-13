@@ -2,7 +2,7 @@ FROM louislam/uptime-kuma:beta-slim as uptime-kuma
 
 FROM alpine:3.14 AS adguard
 WORKDIR /app
-RUN wget https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.55/AdGuardHome_linux_amd64.tar.gz \
+RUN wget https://github.com/AdguardTeam/AdGuardHome/releases/download/v0.107.56/AdGuardHome_linux_amd64.tar.gz \
   && tar -xzf AdGuardHome_linux_amd64.tar.gz \
   && rm AdGuardHome_linux_amd64.tar.gz
 
